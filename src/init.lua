@@ -22,6 +22,7 @@ require("lazy").setup({
   'lewis6991/gitsigns.nvim',
   'tpope/vim-sleuth',
   'Shatur/neovim-ayu',
+  { 'stevearc/conform.nvim', opts = {} },
   { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   {
     'pmizio/typescript-tools.nvim',
@@ -30,15 +31,63 @@ require("lazy").setup({
   },
 })
 
-require("lspconfig").jdtls.setup({
+-- LSP core (define BEFORE any lspconfig.setup calls)
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local function on_attach(client, bufnr)
+  local keymap = function(mode, lhs, rhs, opts)
+    vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("force", { noremap = true, silent = true }, opts or {}))
+  end
+  keymap('n', 'gd', vim.lsp.buf.definition)
+  keymap('n', 'gr', vim.lsp.buf.references)
+  keymap('n', 'K',  vim.lsp.buf.hover)
+  keymap('n', 'gi', vim.lsp.buf.implementation)
+  keymap('n', '<leader>ca', vim.lsp.buf.code_action)
+  keymap('n', '<leader>rn', vim.lsp.buf.rename)
+
+  if client.name == 'rust_analyzer' then
+    vim.api.nvim_create_autocmd('BufWritePre', {
+      buffer = bufnr,
+      callback = function() vim.lsp.buf.format({ async = false }) end,
+    })
+    keymap('n', 'rnw', function()
+      local word = vim.fn.expand('<cword>')
+      local new = vim.fn.input('Replace "' .. word .. '" with: ')
+      if new ~= '' and new ~= word then
+        vim.cmd('%s/\\<' .. word .. '\\>/' .. new .. '/g')
+      end
+    end)
+  end
+end
+
+-- HTML LSP
+local lspconfig = require('lspconfig')
+lspconfig.html.setup({
   capabilities = capabilities,
   on_attach = on_attach,
+})
+
+require('conform').setup({
+  formatters_by_ft = {
+    html = {
+      "prettier_custom",
+    },
+    javascript = { 'prettierd', 'prettier' },
+    javascriptreact = { 'prettierd', 'prettier' },
+    json = { 'prettierd', 'prettier' },
+  },
+  formatters = {
+    prettier_custom = {
+      command = "prettier",
+      args = { "--parser", "babel" }, -- or "angular" if your HTML is more template-like
+      stdin = true,
+    },
+  },
 })
 -- Treesitter
 require('nvim-treesitter.configs').setup({
   highlight = { enable = true },
   indent = { enable = true },
-  ensure_installed = { "lua", "rust", "typescript", "javascript", "query" },
+  ensure_installed = { "lua", "rust", "typescript", "javascript", "query", "tsx" },
   textobjects = {
     select = {
       enable = true,
@@ -105,34 +154,6 @@ require('telescope').setup({
   },
 })
 
--- LSP Setup
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
-local function on_attach(client, bufnr)
-  local keymap = function(mode, lhs, rhs, opts)
-    vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("force", { noremap = true, silent = true }, opts or {}))
-  end
-  keymap('n', 'gd', vim.lsp.buf.definition)
-  keymap('n', 'gr', vim.lsp.buf.references)
-  keymap('n', 'K', vim.lsp.buf.hover)
-  keymap('n', 'gi', vim.lsp.buf.implementation)
-  keymap('n', '<leader>ca', vim.lsp.buf.code_action)
-  keymap('n', '<leader>rn', vim.lsp.buf.rename)
-
-  if client.name == 'rust_analyzer' then
-    vim.api.nvim_create_autocmd('BufWritePre', {
-      buffer = bufnr,
-      callback = function() vim.lsp.buf.format({ async = false }) end,
-    })
-    keymap('n', 'rnw', function()
-      local word = vim.fn.expand('<cword>')
-      local new = vim.fn.input('Replace "' .. word .. '" with: ')
-      if new ~= '' and new ~= word then
-        vim.cmd('%s/\\<' .. word .. '\\>/' .. new .. '/g')
-      end
-    end)
-  end
-end
-
 -- Rust
 require('rust-tools').setup({
   server = {
@@ -141,18 +162,9 @@ require('rust-tools').setup({
     settings = {
       ['rust-analyzer'] = {
         enable = true,
-        checkOnSave = {
-          enable = true,
-          command = 'clippy',
-        },
-        assist = {
-          importEnforceGranularity = true,
-          importPrefix = 'by_self',
-        },
-        imports = {
-          granularity = { group = 'item' },
-          prefix = 'self',
-        },
+        checkOnSave = { enable = true, command = 'clippy' },
+        assist = { importEnforceGranularity = true, importPrefix = 'by_self' },
+        imports = { granularity = { group = 'item' }, prefix = 'self' },
       },
     },
   },
