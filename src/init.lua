@@ -21,7 +21,28 @@ require("lazy").setup({
   'numToStr/Comment.nvim',
   'lewis6991/gitsigns.nvim',
   'tpope/vim-sleuth',
-  'Shatur/neovim-ayu',
+{
+  "rebelot/kanagawa.nvim",
+  lazy = false,
+  priority = 1000,
+  config = function()
+    require("kanagawa").setup({
+      compile = false,
+      overrides = function(colors)
+        return {
+          Normal      = { bg = "#090917" },
+          NormalFloat = { bg = "#090917" },
+          SignColumn  = { bg = "#090917" },
+          LineNr      = { bg = "#090917" },
+          CursorLine  = { bg = "#090917" },
+        }
+      end,
+      
+    })
+
+    vim.cmd("colorscheme kanagawa")
+  end,
+},
   { 'stevearc/conform.nvim', opts = {} },
   { 'nvim-telescope/telescope.nvim', dependencies = { 'nvim-lua/plenary.nvim' } },
   {
@@ -66,8 +87,15 @@ lspconfig.html.setup({
   on_attach = on_attach,
 })
 
+local lspconfig = require('lspconfig')
+lspconfig.svelte.setup({
+  capabilities = capabilities,
+  on_attach = on_attach,
+  filetypes = { "svelte" },  -- explicitly associate with .svelte files
+})
 require('conform').setup({
   formatters_by_ft = {
+    svelte = { "prettier" },  -- assuming prettier handles svelte
     html = {
       "prettier_custom",
     },
@@ -258,4 +286,5 @@ vim.opt.undodir = vim.fn.stdpath('config') .. '/undodir'
 vim.opt.updatetime = 300
 vim.opt.timeoutlen = 500
 vim.o.guifont = 'monospace:h8'
-vim.cmd("colorscheme ayu-dark")
+
+
