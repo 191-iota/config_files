@@ -1,7 +1,7 @@
 -- Bootstrap Lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim", lazypath })
+  vim.fn.system({ "git", "clone", "--filter=blob:none", "github.com/folke/lazy.nvim", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -53,7 +53,7 @@ require("lazy").setup({
 })
 
 -- LSP core (define BEFORE any lspconfig.setup calls)
-local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local capabilities = require('cmp_nvim_lsp').default_capabilities() 
 local function on_attach(client, bufnr)
   local keymap = function(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, vim.tbl_extend("force", { noremap = true, silent = true }, opts or {}))
@@ -81,18 +81,13 @@ local function on_attach(client, bufnr)
 end
 
 -- HTML LSP
-local lspconfig = require('lspconfig')
-lspconfig.html.setup({
+vim.lsp.config('html', {
+  cmd = { 'html-languageserver', '--stdio' },
+  filetypes = { 'html' },
   capabilities = capabilities,
-  on_attach = on_attach,
 })
 
-local lspconfig = require('lspconfig')
-lspconfig.svelte.setup({
-  capabilities = capabilities,
-  on_attach = on_attach,
-  filetypes = { "svelte" },  -- explicitly associate with .svelte files
-})
+
 require('conform').setup({
   formatters_by_ft = {
     svelte = { "prettier" },  -- assuming prettier handles svelte
@@ -182,21 +177,53 @@ require('telescope').setup({
   },
 })
 
--- Rust
-require('rust-tools').setup({
-  server = {
-    capabilities = capabilities,
-    on_attach = on_attach,
-    settings = {
-      ['rust-analyzer'] = {
-        enable = true,
-        checkOnSave = { enable = true, command = 'clippy' },
-        assist = { importEnforceGranularity = true, importPrefix = 'by_self' },
-        imports = { granularity = { group = 'item' }, prefix = 'self' },
+
+
+
+
+
+
+local format_augroup = vim.api.nvim_create_augroup("LspFormat", { clear = true })
+
+local function on_attach(client, bufnr)
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+  vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+  vim.keymap.set('n', 'K',  vim.lsp.buf.hover, opts)
+  if client.server_capabilities and client.server_capabilities.documentFormattingProvider then
+    -- ensure any existing buffer-local autocommands from this group are cleared
+    vim.api.nvim_clear_autocmds({ group = format_augroup, buffer = bufnr })
+    vim.api.nvim_create_autocmd("BufWritePre", {
+      group = format_augroup,
+      buffer = bufnr,
+      callback = function()
+        vim.lsp.buf.format({ bufnr = bufnr })
+      end,
+    })
+  end
+end
+
+vim.lsp.config('rust-analyzer', {
+  cmd = { 'rust-analyzer' },
+  filetypes = { 'rust' },
+  capabilities = capabilities,
+  on_attach = on_attach,
+  settings = {
+    ['rust-analyzer'] = {
+      checkOnSave = { enable = true, command = 'clippy' },
+      assist = {
+        importEnforceGranularity = true,
+        importPrefix = 'by_self',
+      },
+      imports = {
+        granularity = { group = 'item' },
+        prefix = 'self',
       },
     },
   },
 })
+
+vim.lsp.enable('rust-analyzer')
+
 
 -- TypeScript (via typescript-tools)
 require("typescript-tools").setup({
@@ -281,10 +308,8 @@ vim.opt.number = true
 vim.opt.relativenumber = false
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.opt.undofile = true
+vim.opt.undofile = false
 vim.opt.undodir = vim.fn.stdpath('config') .. '/undodir'
 vim.opt.updatetime = 300
 vim.opt.timeoutlen = 500
 vim.o.guifont = 'monospace:h8'
-
-
