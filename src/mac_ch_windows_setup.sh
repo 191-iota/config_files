@@ -1,6 +1,30 @@
 #!/bin/bash
 set -e
 
+# ╔══════════════════════════════════════════════════════════╗
+# ║  Mac Windows-Style Setup                                ║
+# ║                                                         ║
+# ║  KEYBOARD (Karabiner Elements)                          ║
+# ║  - Ctrl+C/V/X/A/S/Z/Y/F/G/N/W/T/B/I/L/R → Cmd         ║
+# ║  - Swiss German AltGr: @ { } [ ] | \ ~ # €             ║
+# ║  - Undo on Z (Swiss Z/Y swap), Redo on Y                ║
+# ║  - Home/End cursor and selection keys                    ║
+# ║  - Alt+F4 quit, F5 reload, F2 rename in Finder          ║
+# ║  - § and < key swap (Mac vs PC position fix)             ║
+# ║  - External KB: AltGr fix (built-in unaffected)          ║
+# ║                                                         ║
+# ║  SCROLL                                                 ║
+# ║  - Trackpad: natural / Mouse: reversed (Scroll Reverser)║
+# ║                                                         ║
+# ║  SYSTEM                                                 ║
+# ║  - Key repeat enabled (accent picker off)                ║
+# ║  - Screenshots copy to clipboard                        ║
+# ║                                                         ║
+# ║  VS CODE                                                ║
+# ║  - Windows Default Keybindings extension                 ║
+# ║  - Swiss special char bindings (alt+key)                 ║
+# ╚══════════════════════════════════════════════════════════╝
+
 echo "=== MacBook Windows-Style Keyboard Setup ==="
 echo ""
 
