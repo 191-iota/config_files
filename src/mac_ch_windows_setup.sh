@@ -19,6 +19,8 @@ set -e
 # ║  SYSTEM                                                 ║
 # ║  - Key repeat enabled (accent picker off)                ║
 # ║  - Screenshots copy to clipboard                        ║
+# ║  - All dock/window animations disabled                   ║
+# ║  - Desktop background set to black                      ║
 # ║                                                         ║
 # ║  VS CODE                                                ║
 # ║  - Windows Default Keybindings extension                 ║
@@ -105,6 +107,31 @@ defaults write NSGlobalDomain ApplePressAndHoldEnabled -false
 
 echo "[6/7] Setting screenshots to clipboard..."
 defaults write com.apple.screencapture target clipboard
+
+echo "[7/7] Disabling animations and setting black wallpaper..."
+defaults write com.apple.dock autohide-time-modifier -int 0
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock launchanim -bool false
+defaults write com.apple.dock expose-animation-duration -float 0
+defaults write com.apple.dock minimize-to-application -bool true
+defaults write com.apple.dock no-bouncing -bool true
+defaults write com.apple.dock mineffect -string scale
+defaults write NSGlobalDomain NSAutomaticWindowAnimationsEnabled -bool false
+killall Dock
+
+mkdir -p ~/Pictures
+convert -size 1x1 xc:black ~/Pictures/black.png 2>/dev/null || python3 -c "
+import struct, zlib
+def png(w,h,r,g,b):
+    raw=b''
+    for _ in range(h): raw+=b'\x00'+bytes([r,g,b])*w
+    return b'\x89PNG\r\n\x1a\n'+b''.join(chunk(t,d) for t,d in [
+        (b'IHDR',struct.pack('>IIBBBBB',w,h,8,2,0,0,0)),
+        (b'IDAT',zlib.compress(raw)),(b'IEND',b'')])
+def chunk(t,d): return struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
+open('$HOME/Pictures/black.png','wb').write(png(1,1,0,0,0))
+"
+osascript -e 'tell application "Finder" to set desktop picture to POSIX file "'$HOME'/Pictures/black.png"'
 
 KPATH="$HOME/Library/Application Support/Code/User/keybindings.json"
 if command -v code &> /dev/null; then
