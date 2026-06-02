@@ -10,6 +10,7 @@ set -e
 # ║  - Undo on Z (Swiss Z/Y swap), Redo on Y                ║
 # ║  - Home/End cursor and selection keys                    ║
 # ║  - Alt+F4 quit, F5 reload, F2 rename in Finder          ║
+# ║  - Ctrl+Enter → Cmd+Enter                               ║
 # ║  - § and < key swap (Mac vs PC position fix)             ║
 # ║  - External KB: AltGr fix (built-in unaffected)          ║
 # ║                                                         ║
@@ -75,6 +76,18 @@ external_swap_rule = {
     ]
 }
 rules.insert(0, external_swap_rule)
+
+# Ctrl+Enter -> Cmd+Enter
+ctrl_enter_rule = {
+    'description': 'PC-Style Control+Enter to Command+Enter',
+    'manipulators': [{
+        'conditions': [{'bundle_identifiers': ['^com\\\\.apple\\\\.Terminal', '^com\\\\.mitchellh\\\\.ghostty'], 'type': 'frontmost_application_unless'}],
+        'from': {'key_code': 'return_or_enter', 'modifiers': {'mandatory': ['control']}},
+        'to': [{'key_code': 'return_or_enter', 'modifiers': ['left_command']}],
+        'type': 'basic'
+    }]
+}
+rules.append(ctrl_enter_rule)
 
 config['profiles'][0]['complex_modifications']['rules'] = rules
 
